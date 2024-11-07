@@ -1,0 +1,161 @@
+//zadannie 2
+#include <iostream>
+#include <fstream> // Для работы с файлами
+
+class MySet {
+private:
+    static const int TABLE_SIZE = 100; // Размер хеш-таблицы
+    static const int CHAIN_SIZE = 10;   // Максимальный размер цепочки
+    int* table[TABLE_SIZE][CHAIN_SIZE]; // Массив указателей на массивы
+    int chainLengths[TABLE_SIZE];        // Длина каждой цепочки
+
+public:
+    MySet() {
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            chainLengths[i] = 0; // Инициализируем длины цепочек
+            for (int j = 0; j < CHAIN_SIZE; ++j) {
+                table[i][j] = nullptr; // Инициализируем указатели null
+            }
+        }
+    }
+
+    // Хеш-функция
+    int hash(int element) {
+        return element % TABLE_SIZE;
+    }
+
+    // Сохранение элементов в файл
+    void saveToFile(const std::string& filename) {
+        std::ofstream outFile(filename);
+        if (outFile.is_open()) {
+            for (int i = 0; i < TABLE_SIZE; ++i) {
+                for (int j = 0; j < chainLengths[i]; ++j) {
+                    outFile << *table[i][j] << std::endl; // Записываем элемент в файл
+                }
+            }
+            outFile.close();
+            std::cout << "Элементы сохранены в " << filename << std::endl;
+        }
+        else {
+            std::cout << "Не удалось открыть файл для записи." << std::endl;
+        }
+    }
+
+    // Добавление элемента
+    void SETADD(int element) {
+        int index = hash(element);
+        // Проверяем, существует ли элемент
+        for (int j = 0; j < chainLengths[index]; ++j) {
+            if (*table[index][j] == element) {
+                std::cout << "Ошибка: Элемент " << element << " уже существует в множестве." << std::endl;
+                return;
+            }
+        }
+
+        // Если цепочка не заполнена, добавляем элемент
+        if (chainLengths[index] < CHAIN_SIZE) {
+            table[index][chainLengths[index]] = new int(element); // Создаем новый элемент
+            chainLengths[index]++;
+            saveToFile("set_elements.txt"); // Сохраняем в файл после добавления
+        }
+        else {
+            std::cout << "Ошибка: Цепочка для элемента " << element << " переполнена." << std::endl;
+        }
+    }
+
+    // Удаление элемента
+    void SETDEL(int element) {
+        int index = hash(element);
+        for (int j = 0; j < chainLengths[index]; ++j) {
+            if (*table[index][j] == element) {
+                delete table[index][j]; // Удаляем элемент
+                // Сдвигаем оставшиеся элементы
+                for (int k = j; k < chainLengths[index] - 1; ++k) {
+                    table[index][k] = table[index][k + 1];
+                }
+                table[index][chainLengths[index] - 1] = nullptr; // Обнуляем последний элемент
+                chainLengths[index]--; // Уменьшаем длину цепочки
+                saveToFile("set_elements.txt"); // Сохраняем в файл после удаления
+                std::cout << "Элемент " << element << " удален из множества." << std::endl;
+                return;
+            }
+        }
+        std::cout << "Ошибка: Элемент " << element << " не найден в множестве." << std::endl;
+    }
+
+    // Проверка наличия элемента
+    bool SET_AT(int element) {
+        int index = hash(element);
+        for (int j = 0; j < chainLengths[index]; ++j) {
+            if (*table[index][j] == element) {
+                return true; // Элемент найден
+            }
+        }
+        return false; // Элемент не найден
+    }
+
+    // Для вывода текущего состояния множества
+    void printSet() {
+        std::cout << "Текущее множество: ";
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            for (int j = 0; j < chainLengths[i]; ++j) {
+                std::cout << *table[i][j] << " "; // Выводим элементы из цепочек
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    // Деструктор для освобождения памяти
+    ~MySet() {
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            for (int j = 0; j < chainLengths[i]; ++j) {
+                delete table[i][j]; // Освобождаем память
+            }
+        }
+    }
+};
+
+int main() {
+    MySet mySet;
+    int choice, element;
+
+    do {
+        std::cout << "Выберите операцию:\n";
+        std::cout << "1. Добавить элемент(SETADD)\n";
+        std::cout << "2. Удалить элемент(SETDEL)\n";
+        std::cout << "3. Проверить наличие элемента(SET_AT)\n";
+        std::cout << "4. Показать текущее множество\n";
+        std::cout << "0. Выход\n";
+        std::cout << "Ваш выбор: ";
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1:
+            std::cout << "Введите элемент для добавления: ";
+            std::cin >> element;
+            mySet.SETADD(element);
+            break;
+        case 2:
+            std::cout << "Введите элемент для удаления: ";
+            std::cin >> element;
+            mySet.SETDEL(element);
+            break;
+        case 3:
+            std::cout << "Введите элемент для проверки: ";
+            std::cin >> element;
+            std::cout << "Проверка наличия " << element << ": "
+                << (mySet.SET_AT(element) ? "Да" : "Нет") << std::endl;
+            break;
+        case 4:
+            mySet.printSet();
+            break;
+        case 0:
+            std::cout << "Выход из программы." << std::endl;
+            break;
+        default:
+            std::cout << "Некорректный выбор. Попробуйте снова." << std::endl;
+        }
+    } while (choice != 0);
+
+    return 0; // Завершаем программу
+}
