@@ -1,0 +1,82 @@
+// zadanie 4
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Структура для динамического массива
+struct DynamicArray {
+    string* data; // Указатель на массив строк
+    int size;     // Текущий размер массива
+    int capacity; // Вместимость массива
+
+    // Конструктор
+    DynamicArray(int initialCapacity) {
+        capacity = initialCapacity;
+        size = 0;
+        data = new string[capacity];
+    }
+
+    // Деструктор
+    ~DynamicArray() {
+        delete[] data;
+    }
+
+    // Метод для добавления элемента
+    void add(const string& element) {
+        if (size == capacity) {
+            // Увеличиваем размер массива
+            capacity *= 2;
+            string* newData = new string[capacity];
+            for (int i = 0; i < size; i++) {
+                newData[i] = data[i];
+            }
+            delete[] data;
+            data = newData;
+        }
+        data[size++] = element;
+    }
+
+    // Метод для получения элемента
+    string& operator[](int index) {
+        return data[index];
+    }
+};
+
+void generateSubarrays(const DynamicArray& arr, int n, int index, int currentSubset[], int currentIndex) {
+    // Печатаем текущий подмассив
+    cout << "{ ";
+    for (int i = 0; i < currentIndex; i++) {
+        cout << arr.data[currentSubset[i]] << " "; 
+    }
+    cout << "}" << endl;
+
+    // Генерация подмассивов
+    for (int i = index; i < n; i++) {
+        currentSubset[currentIndex] = i; // Добавляем текущий элемент в подмассив
+        generateSubarrays(arr, n, i + 1, currentSubset, currentIndex + 1); // Рекурсивный вызов
+    }
+}
+
+int main() {
+    int n;
+
+    cout << "Введите количество элементов в массиве: ";
+    cin >> n;
+
+    DynamicArray arr(2); // Инициализируем динамический массив с начальной вместимостью 2
+    cout << "Введите элементы массива (числа или буквы): ";
+    for (int i = 0; i < n; i++) {
+        string element;
+        cin >> element; // Ввод элементов массива
+        arr.add(element); // Добавляем элемент в динамический массив
+    }
+
+    int* currentSubset = new int[n]; // Массив для хранения текущего подмассива
+
+    cout << "Все различные подмассивы:" << endl;
+    generateSubarrays(arr, n, 0, currentSubset, 0);
+
+    delete[] currentSubset; // Освобождаем память
+    return 0;
+}
