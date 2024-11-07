@@ -1,0 +1,77 @@
+//zadanie 3
+#include <iostream>
+
+using namespace std;
+
+const int MAX_SIZE = 100;
+
+bool canPartition(int nums[], int n, int subsetSum) {
+    if (subsetSum == 0) return true;
+    if (n == 0) return false;
+
+    // Если текущий элемент больше суммы подмножества, пропускаем его
+    if (nums[n - 1] > subsetSum) {
+        return canPartition(nums, n - 1, subsetSum);
+    }
+
+    // Проверяем, можем ли мы получить сумму, включая или исключая текущий элемент
+    return canPartition(nums, n - 1, subsetSum - nums[n - 1]) ||
+        canPartition(nums, n - 1, subsetSum);
+}
+
+void findSubsets(int nums[], int n, int targetSum, int currentSubset[], int currentIndex, int start) {
+    if (targetSum == 0) {
+        cout << "{ ";
+        for (int i = 0; i < currentIndex; i++) {
+            cout << currentSubset[i] << " ";
+        }
+        cout << "}" << endl;
+        return;
+    }
+
+    for (int i = start; i < n; i++) {
+        if (nums[i] <= targetSum) {
+            currentSubset[currentIndex] = nums[i];
+            findSubsets(nums, n, targetSum - nums[i], currentSubset, currentIndex + 1, i + 1);
+        }
+    }
+}
+
+int main() {
+    int nums[MAX_SIZE];
+    int n;
+
+    cout << "Введите количество элементов в множестве: ";
+    cin >> n;
+
+    cout << "Введите элементы множества: ";
+    for (int i = 0; i < n; i++) {
+        cin >> nums[i];
+    }
+
+    int totalSum = 0;
+    for (int i = 0; i < n; i++) {
+        totalSum += nums[i];
+    }
+
+    // Если сумма нечетная, невозможно разбить на два подмножества с равной суммой
+    if (totalSum % 2 != 0) {
+        cout << "Ошибка: множество не может быть разбито на подмножества с равной суммой." << endl;
+        return 0;
+    }
+
+    int subsetSum = totalSum / 2;
+
+    // Проверка возможности разбиения
+    if (!canPartition(nums, n, subsetSum)) {
+        cout << "Ошибка: множество не может быть разбито на подмножества с равной суммой." << endl;
+        return 0;
+    }
+
+    // Находим подмножества
+    cout << "Найдены подмножества с равной суммой " << subsetSum << ":" << endl;
+    int currentSubset[MAX_SIZE];
+    findSubsets(nums, n, subsetSum, currentSubset, 0, 0);
+
+    return 0;
+}
