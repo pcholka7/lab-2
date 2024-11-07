@@ -1,0 +1,140 @@
+#include <iostream>
+
+using namespace std;
+
+const int MAX_TASKS = 26; // Максимальное количество задач 
+const int MAX_DEPENDENCIES = 10; // Максимальное количество зависимостей для каждой задачи
+
+// Структура для представления задачи
+struct Task {
+    char name; // Имя задачи
+    int indegree; // Степень входа (число зависимостей)
+    char dependents[MAX_DEPENDENCIES]; // Зависимые задачи
+    int dependentCount; // Количество зависимых задач
+};
+
+
+class Stack {
+private:
+    int top; // Индекс верхнего элемента стека
+    int capacity; // Вместимость стека
+    int* array; // Массив для хранения элементов стека
+
+public:
+    // Конструктор стека
+    Stack(int size) {
+        capacity = size;
+        top = -1;
+        array = new int[size]; // Выделяем память для массива
+    }
+
+    // Деструктор для освобождения памяти
+    ~Stack() {
+        delete[] array;
+    }
+
+    // Метод для добавления элемента в стек
+    void push(int item) {
+        if (top < capacity - 1) {
+            array[++top] = item;
+        }
+    }
+
+    // Метод для извлечения элемента из стека
+    int pop() {
+        if (top >= 0) { // Проверяем, не пуст ли стек
+            return array[top--]; // Возвращаем верхний элемент и уменьшаем верхний индекс
+        }
+        return -1;
+    }
+
+    // Метод для проверки, пуст ли стек
+    bool isEmpty() {
+        return top == -1; // Возвращаем true, если стек пуст
+    }
+};
+
+// Функция для проверки возможности завершения всех задач
+bool canCompleteTasks(Task tasks[], int n) {
+    int completedTasks = 0; // Счетчик завершенных задач
+    Stack taskStack(n); // Создаем стек для хранения задач без зависимостей
+
+    // Ищем все задачи без зависимостей и помещаем их в стек
+    for (int i = 0; i < n; i++) {
+        if (tasks[i].indegree == 0) { // Если степень входа равна 0
+            taskStack.push(i); // Добавляем индекс задачи в стек
+        }
+    }
+
+    // Обработка задач из стека
+    while (!taskStack.isEmpty()) { // Пока стек не пуст
+        int current = taskStack.pop(); // Извлекаем верхнюю задачу из стека
+        completedTasks++; // Увеличиваем количество завершенных задач
+
+        // Уменьшаем степень входа для зависимых задач
+        for (int j = 0; j < tasks[current].dependentCount; j++) {
+            char dependent = tasks[current].dependents[j]; // Получаем зависимую задачу
+            for (int k = 0; k < n; k++) {
+                if (tasks[k].name == dependent) { // Находим зависимую задачу в массиве
+                    tasks[k].indegree--; // Уменьшаем степень входа
+                    // Если степень входа задачи стала равной 0, добавляем её в стек
+                    if (tasks[k].indegree == 0) {
+                        taskStack.push(k); // Добавляем задачу в стек
+                    }
+                    break; // Выходим из внутреннего цикла
+                }
+            }
+        }
+    }
+
+    // Если завершили все задачи, возвращаем true
+    return completedTasks == n; // Возвращаем true, если все задачи завершены
+}
+
+int main() {
+    int n;
+    cout << "Введите количество задач: ";
+    cin >> n; // Ввод количества задач
+
+    Task tasks[MAX_TASKS]; // Массив для хранения задач
+    int taskCount = 0; // Счетчик введенных задач
+
+    // Ввод задач
+    cout << "Введите задачи (например, A B C): ";
+    for (int i = 0; i < n; i++) {
+        char taskName;
+        cin >> taskName; // Ввод имени задачи
+        tasks[taskCount++] = { taskName, 0, {}, 0 }; // Инициализируем задачу
+    }
+
+    // Ввод зависимостей
+    cout << "Введите количество зависимостей: ";
+    int dependenciesCount;
+    cin >> dependenciesCount; // Ввод количества зависимостей
+
+    cout << "Введите зависимости (например, A B для 'A зависит от B'): " << endl;
+    for (int i = 0; i < dependenciesCount; i++) {
+        char dependent, dependency;
+        cin >> dependent >> dependency; // Ввод зависимой и зависимости
+
+        // Добавляем зависимость и увеличиваем степень входа
+        for (int j = 0; j < taskCount; j++) {
+            if (tasks[j].name == dependent) {
+                tasks[j].dependents[tasks[j].dependentCount++] = dependency; // Добавляем зависимость
+            }
+            if (tasks[j].name == dependency) {
+                tasks[j].indegree++; // Увеличиваем степень входа
+            }
+        }
+    }
+
+    // Проверяем, возможно ли завершить все задачи
+    if (canCompleteTasks(tasks, taskCount)) {
+        cout << "Возможно" << endl; // Если возможно, выводим сообщение
+    }
+    else {
+        cout << "Невозможно" << endl; // Если невозможно, выводим сообщение
+    }
+
+    return 0; // Завершение программы
+}
