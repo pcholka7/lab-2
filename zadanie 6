@@ -1,0 +1,110 @@
+#include <iostream>
+#include <cstring> // Для memset
+#include <string>
+
+class BloomFilter {
+private:
+    bool* bitArray; // Массив битов для хранения состояния
+    int size; // Размер фильтра Блума
+    int numHashFunctions; // Количество хеш-функций
+
+    // Хеш-функция 1
+    int hash1(const std::string& str) const {
+        int hash = 0;
+        for (char ch : str) {
+            hash = (hash * 31 + ch) % size; // Простое хеширование
+        }
+        return hash;
+    }
+
+    // Хеш-функция 2
+    int hash2(const std::string& str) const {
+        int hash = 0;
+        for (char ch : str) {
+            hash = (hash * 37 + ch) % size; // Используем другой множитель
+        }
+        return hash;
+    }
+
+    // Хеш-функция 3
+    int hash3(const std::string& str) const {
+        int hash = 0;
+        for (char ch : str) {
+            hash = (hash * 41 + ch) % size; // Еще один множитель
+        }
+        return hash;
+    }
+
+public:
+    // Конструктор класса
+    BloomFilter(int s, int k) : size(s), numHashFunctions(k) {
+        bitArray = new bool[size]; // Создание массива битов
+        std::memset(bitArray, 0, size * sizeof(bool)); // Инициализация массива нулями
+    }
+
+    // Деструктор класса
+    ~BloomFilter() {
+        delete[] bitArray; // Освобождение памяти
+    }
+
+    // Метод для добавления строки в фильтр
+    void add(const std::string& str) {
+        int h1 = hash1(str); // Получение первого хеша
+        int h2 = hash2(str); // Получение второго хеша
+        int h3 = hash3(str); // Получение третьего хеша
+
+        // Установка битов по индексам, полученным из хеш-функций
+        bitArray[h1] = true;
+        bitArray[h2] = true;
+        bitArray[h3] = true;
+    }
+
+    // Метод для проверки наличия строки в фильтре
+    bool contains(const std::string& str) const {
+        int h1 = hash1(str); // Получение первого хеша
+        int h2 = hash2(str); // Получение второго хеша
+        int h3 = hash3(str); // Получение третьего хеша
+
+        // Проверка установлен ли бит по индексам
+        return bitArray[h1] && bitArray[h2] && bitArray[h3];
+    }
+};
+
+int main() {
+    int size, numHashFunctions;
+
+    std::cout << "Введите размер фильтра Блума: ";
+    std::cin >> size;
+    std::cout << "Введите количество хеш-функций: ";
+    std::cin >> numHashFunctions;
+
+    BloomFilter bloomFilter(size, numHashFunctions);
+
+    int numStrings;
+    std::cout << "Сколько строк вы хотите добавить в фильтр Блума? ";
+    std::cin >> numStrings;
+
+    // Добавление строк в фильтр
+    for (int i = 0; i < numStrings; ++i) {
+        std::string str;
+        std::cout << "Введите строку " << i + 1 << ": ";
+        std::cin >> str;
+        bloomFilter.add(str); // Добавление строки в фильтр
+    }
+
+    // Проверка наличия строк в фильтре
+    std::cout << "Проверка наличия строк в фильтре Блума:\n";
+    for (int i = 0; i < numStrings; ++i) {
+        std::string str;
+        std::cout << "Введите строку для проверки " << i + 1 << ": ";
+        std::cin >> str;
+        if (bloomFilter.contains(str)) {
+            std::cout << "Строка '" << str << "' возможно есть в фильтре Блума.\n";
+        }
+        else {
+            std::cout << "Строка '" << str << "' точно нет в фильтре Блума.\n";
+        }
+    }
+
+    return 0; // Завершение программы
+}
