@@ -1,0 +1,83 @@
+//zadanie 5
+#include <iostream>
+
+using namespace std;
+
+// Структура для узла дерева
+struct TreeNode {
+    int value;
+    TreeNode* left;
+    TreeNode* right;
+
+    TreeNode(int val) : value(val), left(nullptr), right(nullptr) {}
+};
+
+// Функция для вставки элемента в бинарное дерево поиска
+TreeNode* insert(TreeNode* root, int value) {
+    if (root == nullptr) {
+        return new TreeNode(value);
+    }
+    if (value < root->value) {
+        root->left = insert(root->left, value);
+    }
+    else if (value > root->value) {
+        root->right = insert(root->right, value);
+    }
+    return root;
+}
+
+// Функция для нахождения узлов с двумя детьми
+void findNodesWithTwoChildren(TreeNode* root, int result[], int& index) {
+    if (root == nullptr) {
+        return;
+    }
+    // Проверяем, есть ли у узла два ребёнка
+    if (root->left != nullptr && root->right != nullptr) {
+        result[index++] = root->value; // Сохраняем значение узла
+    }
+    findNodesWithTwoChildren(root->left, result, index);
+    findNodesWithTwoChildren(root->right, result, index);
+}
+
+// Функция для сортировки массива
+void sortArray(int arr[], int size) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // Обмен значениями
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    TreeNode* root = nullptr;
+    int value;
+
+    cout << "Введите последовательность целых чисел, оканчивающуюся нулем: ";
+    while (true) {
+        cin >> value;
+        if (value == 0) {
+            break; // Останавливаем ввод при нуле
+        }
+        root = insert(root, value); // Вставляем элемент в дерево
+    }
+
+    int result[100]; // Массив для хранения узлов с двумя детьми
+    int index = 0;
+    findNodesWithTwoChildren(root, result, index);
+
+    // Сортируем результат
+    sortArray(result, index);
+
+    cout << "Вершины с двумя детьми: ";
+    for (int i = 0; i < index; i++) {
+        cout << result[i] << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
